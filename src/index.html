@@ -1,17 +1,584 @@
 <!DOCTYPE html>
 <html lang="en">
 
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-  <title>Vanilla JavaScript App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Vanilla JavaScript App</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+    <style>
+
+    </style>
+
+    <script>
+        //coin properties:
+        //name, thumb, market_cap_rank, ath, market_cap, high_24h, low_24h,
+        //price_change_24h, price_change_percentage_24h, price_change_percentage_7d,
+        //price_change_24h_in_currency, price_change_percentage_24h_in_currency,
+        //price_change_percentage_7d_in_currency, price_change_percentage_30d_in_currency,
+        //sparkline_7d
+
+        const unixMinute = 60000;
+        const unixHour = unixMinute * 60;
+        const unixDay = unixMinute * 24;
+
+
+        function getChangeColor(dataPoints) {
+
+            if (dataPoints[0] > dataPoints[dataPoints.length - 2]) {
+                return 'red';
+
+            } else {
+                return 'green';
+            }
+        }
+
+
+        function getUnixTime() {
+            let d = new Date();
+            let ut = d.getTime();
+            console.log("Unix time now: " + ut);
+            return ut;
+        }
+
+
+
+
+
+
+        function makeCoinChart(chartId, dataPoints) {
+
+
+            let changeColor = getChangeColor(dataPoints);
+
+
+            //x axis (days descending backwards)
+            let xaxislbls = Array(dataPoints.length);
+            for (let i = dataPoints.length - 1; i >= 0; i--) {
+                xaxislbls[i] = i;
+            }
+
+
+            //chart
+            new Chart(chartId, {
+                type: "line",
+                data: {
+
+                    labels: xaxislbls,
+
+                    datasets: [{
+                        fill: true,
+
+                        //chart colors
+                        //backgroundColor: backColor,
+
+                        borderColor: changeColor,
+                        borderWidth: 2,
+                        pointRadius: 0,
+
+                        data: dataPoints
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: true,
+
+                    legend: {
+                        display: false
+                    },
+
+
+                    scales: {
+                        xAxes: [{
+                            gridLines: {
+                                display: false
+                            },
+                            ticks: {
+                                display: false,
+
+                            }
+                        }],
+                        yAxes: [{
+                            gridLines: {
+                                display: false
+                            },
+                            ticks: {
+                                display: false,
+
+
+                            }
+                        }]
+                    }
+
+
+
+                }
+
+            });
+        }
+
+
+
+        function mouseOverCurrency(currency) {
+            if (currency === "usd") {
+                let allUsd = document.getElementsByClassName('VsUsd');
+                let allBtc = document.getElementsByClassName('VsBtc');
+                let allEth = document.getElementsByClassName('VsEth');
+
+                for (var i = 0; i < allUsd.length; i++) {
+                    allUsd[i].style.display = "inline";
+                }
+                for (var i = 0; i < allBtc.length; i++) {
+                    allBtc[i].style.display = "none";
+                }
+                for (var i = 0; i < allEth.length; i++) {
+                    allEth[i].style.display = "none";
+                }
+
+
+
+            } else if (currency === "btc") {
+                let allUsd = document.getElementsByClassName('VsUsd');
+                let allBtc = document.getElementsByClassName('VsBtc');
+                let allEth = document.getElementsByClassName('VsEth');
+
+                for (var i = 0; i < allUsd.length; i++) {
+                    allUsd[i].style.display = "none";
+                }
+                for (var i = 0; i < allBtc.length; i++) {
+                    allBtc[i].style.display = "inline";
+                }
+                for (var i = 0; i < allEth.length; i++) {
+                    allEth[i].style.display = "none";
+                }
+
+            } else if (currency === "eth") {
+                let allUsd = document.getElementsByClassName('VsUsd');
+                let allBtc = document.getElementsByClassName('VsBtc');
+                let allEth = document.getElementsByClassName('VsEth');
+
+                for (var i = 0; i < allUsd.length; i++) {
+                    allUsd[i].style.display = "none";
+                }
+                for (var i = 0; i < allBtc.length; i++) {
+                    allBtc[i].style.display = "none";
+                }
+                for (var i = 0; i < allEth.length; i++) {
+                    allEth[i].style.display = "inline";
+                }
+            }
+
+        }
+
+
+
+
+        async function drawCoinRow(coin) {
+
+
+
+
+
+            $(document.body).append('<tr>');
+
+            $(document.body).append('<td>');
+            $(document.body).append('' + coin.name + '');
+            $(document.body).append('</td>');
+
+            $(document.body).append('<td>');
+            let changeColor = getChangeColor(coin.market_data.price_change_percentage_7d);
+            $(document.body).append('<b style="color: ' + changeColor + ';">' + coin.market_data.price_change_percentage_7d_in_currency.usd.toFixed(2) + "%</b>");
+            $(document.body).append('</td>');
+
+
+
+            $(document.body).append('<td>');
+            let chartId = getChartId(coin.symbol, '7d', 'usd')
+            $(document.body).append('<br><canvas id="' + chartId + '" class="' + chartId + '"></canvas>');
+            $(document.body).append('</td>');
+
+            /*
+                        $(document.body).append('<td class="VsBtc">');
+
+                        $(document.body).append(coinObj.name + ' vs btc <b style="color: ' + btcChangeColor + ';">' + coinObj.market_data.price_change_percentage_7d_in_currency.btc + "%</b>");
+                        $(document.body).append('<br><canvas id="' +
+                            coinObj.id + 'vsBtc"' +
+                            ' class="VsBtc"></canvas>');
+
+                        $(document.body).append('</td>');
+            */
+
+            /*
+                        $(document.body).append('<td class="VsEth">');
+
+                        $(document.body).append(coinObj.name + ' vs eth <b style="color: ' + ethChangeColor + ';">' + coinObj.market_data.price_change_percentage_7d_in_currency.eth + "%</b>");
+                        $(document.body).append('<br><canvas id="' +
+                            coinObj.id + 'vsEth"' +
+                            ' class="VsEth"></canvas>');
+
+                        $(document.body).append('</td>');
+            */
+
+
+            $(document.body).append('</tr>');
+
+
+            makeCoinChart(chartId, coin.market_data.sparkline_7d.price);
+
+
+            //makeCoinChart(coinObj.id + 'vsBtc', vsBtc);
+
+            //makeCoinChart(coinObj.id + 'vsEth', vsEth);
+
+
+
+
+
+            //functions:
+
+            function getChartId(coinSymbol, timeFrame, vsCurrency) {
+
+                let timeFrameAbbr;
+
+                vsCurrency = vsCurrency.toLowerCase();
+                vsCurrency = vsCurrency[0].toUpperCase() + vsCurrency.substring(1);
+
+                switch (timeFrame) {
+
+                    case '24h':
+                    case '24':
+                    case '1d':
+                        timeFrameAbbr = "24h";
+                        break;
+
+                    case '48h':
+                    case '48':
+                    case '2d':
+                        timeFrameAbbr = "2d";
+                        break;
+
+                    case '3d':
+                    case '3':
+                        timeFrameAbbr = "3d";
+                        break;
+
+                    case '7d':
+                    case '7':
+                        timeFrameAbbr = "7d";
+                        break;
+
+                    case '30d':
+                    case '30':
+                    case '1m':
+                        timeFrameAbbr = "30d";
+                        break;
+
+                    case '60d':
+                    case '60':
+                    case '2m':
+                        timeFrameAbbr = "60d";
+                        break;
+
+                    case '90d':
+                    case '90':
+                    case '3m':
+                        timeFrameAbbr = "90d";
+                        break;
+
+                    case '180d':
+                    case '180':
+                    case '6m':
+                        timeFrameAbbr = "6m";
+                        break;
+
+                    case '365d':
+                    case '365':
+                    case '1y':
+                        timeFrameAbbr = "1y";
+                        break;
+
+                    default:
+                        console.log("Error in timeframe \"" + timeFrame + "\" for " + coinSymbol);
+
+                }
+
+                return coinSymbol + "Chart" + timeFrameAbbr + "vs" + vsCurrency;
+
+
+            }
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+        //=====================================================================
+        //=====================================================================
+        //init
+        async function initCoins() {
+
+            let coins = await getCoins();
+            console.log(coins);
+            let coinsDataPoints = await getCoinsDatapoints('1d', 'usd');
+            console.log(coinsDataPoints);
+
+
+            coins.forEach(coin => {
+                drawCoinRow(coin);
+            });
+
+
+            for (let i = 0; i < coins.length; i++) {
+
+            }
+
+
+
+
+
+            //init functions:
+            async function getCoin(coinId) {
+                let endpoint =
+                    "https://api.coingecko.com/api/v3/coins/" +
+                    coinId +
+                    "?tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=true"
+
+                let coinResponse = await fetch(endpoint);
+                let coinJson = await coinResponse.json();
+
+                return coinJson;
+            }
+
+            async function getCoins() {
+
+                //coin id list:  https://api.coingecko.com/api/v3/coins/list
+
+                let btc =
+                    await getCoin("bitcoin");
+
+                let eth =
+                    await getCoin("ethereum");
+
+                let bnb =
+                    await getCoin("binancecoin");
+
+                let ada =
+                    await getCoin("cardano");
+
+                let sol =
+                    await getCoin("solana");
+
+                let xrp =
+                    await getCoin("ripple");
+
+                let ltc =
+                    await getCoin("litecoin");
+
+                let vet =
+                    await getCoin("vechain");
+
+
+                return [btc, eth, bnb, ada, sol, xrp, ltc, vet];
+
+
+            }
+
+
+
+
+
+            async function getCoinDatapoints(coinId, vsCurrency, fromTime, toTime) {
+
+
+                let endpoint =
+                    "https://api.coingecko.com/api/v3/coins/" +
+                    coinId + '/' +
+                    "market_chart/range?vs_currency=" +
+                    vsCurrency + '&' +
+                    'from=' + fromTime + '&' +
+                    'to=' + toTime;
+
+                let datapointsResponse = await fetch(endpoint);
+                let datapointsJson = await datapointsResponse.json();
+
+                return datapointsJson;
+            }
+
+            async function getCoinsDatapoints(timeFrame, vsCurrency) {
+
+                let toTime = getUnixTime();
+                let fromTime = 1262339000;
+
+                switch (timeFrame) {
+
+                    case '24h':
+                    case '24':
+                    case '1d':
+                        fromTime = toTime - (unixHour * 24)
+                        break;
+
+                    case '48h':
+                    case '48':
+                    case '2d':
+                        fromTime = toTime - (unixHour * 48)
+                        break;
+
+                    case '3d':
+                    case '3':
+                        fromTime = toTime - (unixHour * 72)
+                        break;
+
+                    case '7d':
+                    case '7':
+                        fromTime = toTime - (unixDay * 7)
+                        break;
+
+                    case '30d':
+                    case '30':
+                    case '1m':
+                        fromTime = toTime - (unixDay * 30)
+                        break;
+
+                    case '60d':
+                    case '60':
+                    case '2m':
+                        fromTime = toTime - (unixDay * 60)
+                        break;
+
+                    case '90d':
+                    case '90':
+                    case '3m':
+                        fromTime = toTime - (unixDay * 90)
+                        break;
+
+                    case '180d':
+                    case '180':
+                    case '6m':
+                        fromTime = toTime - (unixDay * 180)
+                        break;
+
+                    case '365d':
+                    case '365':
+                    case '1y':
+                        fromTime = toTime - (unixDay * 365)
+                        break;
+
+                    default:
+                        fromTime = 1262339000;
+                        console.log("Error in timeframe \"" + timeFrame + "\"");
+
+                }
+
+
+
+                let btcDataPoints =
+                    await getCoinDatapoints("bitcoin", 'usd', fromTime, toTime);
+                btcDataPoints.symbol = 'bitcoin';
+                btcDataPoints.fromTime = fromTime;
+                btcDataPoints.toTime = toTime;
+                btcDataPoints.vsCurrency = vsCurrency;
+
+
+                let ethDataPoints =
+                    await getCoinDatapoints("ethereum", 'usd', fromTime, toTime);
+                ethDataPoints.symbol = 'ethereum';
+                ethDataPoints.fromTime = fromTime;
+                ethDataPoints.toTime = toTime;
+                ethDataPoints.vsCurrency = vsCurrency;
+
+
+                let bnbDataPoints =
+                    await getCoinDatapoints("binancecoin", 'usd', fromTime, toTime);
+                bnbDataPoints.symbol = 'binancecoin';
+                bnbDataPoints.fromTime = fromTime;
+                bnbDataPoints.toTime = toTime;
+                bnbDataPoints.vsCurrency = vsCurrency;
+
+
+                let adaDataPoints =
+                    await getCoinDatapoints("cardano", 'usd', fromTime, toTime);
+                adaDataPoints.symbol = 'cardano';
+                adaDataPoints.fromTime = fromTime;
+                adaDataPoints.toTime = toTime;
+                adaDataPoints.vsCurrency = vsCurrency;
+
+
+                let solDataPoints =
+                    await getCoinDatapoints("solana", 'usd', fromTime, toTime);
+                solDataPoints.symbol = 'solana';
+                solDataPoints.fromTime = fromTime;
+                solDataPoints.toTime = toTime;
+                solDataPoints.vsCurrency = vsCurrency;
+
+
+                let xrpDataPoints =
+                    await getCoinDatapoints("ripple", 'usd', fromTime, toTime);
+                xrpDataPoints.symbol = 'ripple';
+                xrpDataPoints.fromTime = fromTime;
+                xrpDataPoints.toTime = toTime;
+                xrpDataPoints.vsCurrency = vsCurrency;
+
+
+                let ltcDataPoints =
+                    await getCoinDatapoints("litecoin", 'usd', fromTime, toTime);
+                ltcDataPoints.symbol = 'litecoin';
+                ltcDataPoints.fromTime = fromTime;
+                ltcDataPoints.toTime = toTime;
+                ltcDataPoints.vsCurrency = vsCurrency;
+
+
+                let vetDataPoints =
+                    await getCoinDatapoints("vechain", 'usd', fromTime, toTime);
+                vetDataPoints.symbol = 'vechain';
+                vetDataPoints.fromTime = fromTime;
+                vetDataPoints.toTime = toTime;
+                vetDataPoints.vsCurrency = vsCurrency;
+
+
+
+                return [btcDataPoints, ethDataPoints, bnbDataPoints, adaDataPoints, solDataPoints, xrpDataPoints, ltcDataPoints, vetDataPoints];
+
+            }
+
+        }
+        //end init
+        //=====================================================================
+        //=====================================================================
+    </script>
+
 </head>
 
 <body>
-  <main>
-    <h1>Vanilla JavaScript App</h1>
-  </main>
+
+
+    <table style="margin:15px; padding: 2px;">
+        <tr>
+            <td><span onmouseover="mouseOverCurrency('usd')">usd</span></td>
+            <td><span onmouseover="mouseOverCurrency('btc')">btc</span></td>
+            <td><span onmouseover="mouseOverCurrency('eth')">eth</span></td>
+        </tr>
+    </table>
+
+
+    <script>
+        initCoins();
+    </script>
+
+
+
+
+
 </body>
 
 </html>
