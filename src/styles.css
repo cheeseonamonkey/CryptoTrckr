@@ -2,8 +2,10 @@
 canvas.VsBtc,
 canvas.VsEth,
 canvas.VsUsd {
-    width: 15px !important;
-    height: 6px !important;
+
+    width: 811px !important;
+    height: 811px !important;
+
     display: inline-block;
 }
 
