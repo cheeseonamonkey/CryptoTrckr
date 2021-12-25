@@ -22,14 +22,144 @@
         //price_change_percentage_7d_in_currency, price_change_percentage_30d_in_currency,
         //sparkline_7d
 
-        const unixMinute = 60000;
+        const unixMinute = 60;
         const unixHour = unixMinute * 60;
-        const unixDay = unixMinute * 24;
+        const unixDay = unixHour * 24;
 
+
+            function getChartId(coinSymbol, timeFrame, vsCurrency) {
+
+                let timeFrameAbbr = getTimeFrameCode(timeFrame);
+
+                vsCurrency = vsCurrency.toLowerCase();
+                vsCurrency = vsCurrency[0].toUpperCase() + vsCurrency.substring(1);
+
+              
+
+                return coinSymbol + "Chart" + timeFrameAbbr + "vs" + vsCurrency;
+
+
+            }
+
+
+
+        function getPercentChange(dataPoints) {
+            let before = dataPoints[0];
+            let after = dataPoints[dataPoints.length - 1]
+
+            let decimalChange = (after - before) / Math.abs(before);
+
+            let percentChange = decimalChange *  100;
+
+            return percentChange;
+        }
+
+        function getTimeFrameCode(tf)
+        {
+            let timeFrame = tf;
+            let timeFrameAbbr;
+
+              switch (timeFrame) {
+
+                    case '24h':
+                    case '24':
+                    case '1d':
+                        timeFrameAbbr = "24h";
+                        break;
+
+                    case '48h':
+                    case '48':
+                    case '2d':
+                        timeFrameAbbr = "2d";
+                        break;
+
+                    case '3d':
+                    case '3':
+                        timeFrameAbbr = "3d";
+                        break;
+
+                    case '7d':
+                    case '7':
+                        timeFrameAbbr = "7d";
+                        break;
+
+                    case '30d':
+                    case '30':
+                    case '1m':
+                        timeFrameAbbr = "30d";
+                        break;
+
+                    case '60d':
+                    case '60':
+                    case '2m':
+                        timeFrameAbbr = "60d";
+                        break;
+
+                    case '90d':
+                    case '90':
+                    case '3m':
+                        timeFrameAbbr = "90d";
+                        break;
+
+                    case '180d':
+                    case '180':
+                    case '6m':
+                        timeFrameAbbr = "6m";
+                        break;
+
+                    case '365d':
+                    case '365':
+                    case '1y':
+                        timeFrameAbbr = "1y";
+                        break;
+
+                    default:
+                        console.log("Error in timeframe: \"" + timeFrame);
+                }
+
+                return timeFrameAbbr;
+        }
+
+        function getFromTime(timeCode, toTime) {
+            
+            let fromTime;
+
+            switch(timeCode) {
+                case '24h':
+                    fromTime = toTime - (unixDay);
+                break;
+
+                case '3d':
+                    fromTime = toTime - (unixDay * 3);
+                break;
+
+                case '7d':
+fromTime = toTime - (unixDay * 7);
+                break;
+
+                case '30d':
+fromTime = toTime - (unixDay * 30);
+                break;
+
+                case '90d':
+fromTime = toTime - (unixDay * 30);
+                break;
+                
+                case '1y':
+fromTime = toTime - (unixDay * 365);
+
+                break;
+
+                default:
+            }
+
+            return fromTime;
+
+        }
 
         function getChangeColor(dataPoints) {
 
-            if (dataPoints[0] > dataPoints[dataPoints.length - 2]) {
+            if (dataPoints[0] > dataPoints[dataPoints.length - 1]) {
                 return 'red';
 
             } else {
@@ -41,7 +171,12 @@
         function getUnixTime() {
             let d = new Date();
             let ut = d.getTime();
+            
+            ut = ut / 1000;
+            ut = Math.round(ut);
+
             console.log("Unix time now: " + ut);
+
             return ut;
         }
 
@@ -177,147 +312,6 @@
 
 
 
-        async function drawCoinRow(coin) {
-
-
-
-
-
-            $(document.body).append('<tr>');
-
-            $(document.body).append('<td>');
-            $(document.body).append('' + coin.name + '');
-            $(document.body).append('</td>');
-
-            $(document.body).append('<td>');
-            let changeColor = getChangeColor(coin.market_data.price_change_percentage_7d);
-            $(document.body).append('<b style="color: ' + changeColor + ';">' + coin.market_data.price_change_percentage_7d_in_currency.usd.toFixed(2) + "%</b>");
-            $(document.body).append('</td>');
-
-
-
-            $(document.body).append('<td>');
-            let chartId = getChartId(coin.symbol, '7d', 'usd')
-            $(document.body).append('<br><canvas id="' + chartId + '" class="' + chartId + '"></canvas>');
-            $(document.body).append('</td>');
-
-            /*
-                        $(document.body).append('<td class="VsBtc">');
-
-                        $(document.body).append(coinObj.name + ' vs btc <b style="color: ' + btcChangeColor + ';">' + coinObj.market_data.price_change_percentage_7d_in_currency.btc + "%</b>");
-                        $(document.body).append('<br><canvas id="' +
-                            coinObj.id + 'vsBtc"' +
-                            ' class="VsBtc"></canvas>');
-
-                        $(document.body).append('</td>');
-            */
-
-            /*
-                        $(document.body).append('<td class="VsEth">');
-
-                        $(document.body).append(coinObj.name + ' vs eth <b style="color: ' + ethChangeColor + ';">' + coinObj.market_data.price_change_percentage_7d_in_currency.eth + "%</b>");
-                        $(document.body).append('<br><canvas id="' +
-                            coinObj.id + 'vsEth"' +
-                            ' class="VsEth"></canvas>');
-
-                        $(document.body).append('</td>');
-            */
-
-
-            $(document.body).append('</tr>');
-
-
-            makeCoinChart(chartId, coin.market_data.sparkline_7d.price);
-
-
-            //makeCoinChart(coinObj.id + 'vsBtc', vsBtc);
-
-            //makeCoinChart(coinObj.id + 'vsEth', vsEth);
-
-
-
-
-
-            //functions:
-
-            function getChartId(coinSymbol, timeFrame, vsCurrency) {
-
-                let timeFrameAbbr;
-
-                vsCurrency = vsCurrency.toLowerCase();
-                vsCurrency = vsCurrency[0].toUpperCase() + vsCurrency.substring(1);
-
-                switch (timeFrame) {
-
-                    case '24h':
-                    case '24':
-                    case '1d':
-                        timeFrameAbbr = "24h";
-                        break;
-
-                    case '48h':
-                    case '48':
-                    case '2d':
-                        timeFrameAbbr = "2d";
-                        break;
-
-                    case '3d':
-                    case '3':
-                        timeFrameAbbr = "3d";
-                        break;
-
-                    case '7d':
-                    case '7':
-                        timeFrameAbbr = "7d";
-                        break;
-
-                    case '30d':
-                    case '30':
-                    case '1m':
-                        timeFrameAbbr = "30d";
-                        break;
-
-                    case '60d':
-                    case '60':
-                    case '2m':
-                        timeFrameAbbr = "60d";
-                        break;
-
-                    case '90d':
-                    case '90':
-                    case '3m':
-                        timeFrameAbbr = "90d";
-                        break;
-
-                    case '180d':
-                    case '180':
-                    case '6m':
-                        timeFrameAbbr = "6m";
-                        break;
-
-                    case '365d':
-                    case '365':
-                    case '1y':
-                        timeFrameAbbr = "1y";
-                        break;
-
-                    default:
-                        console.log("Error in timeframe \"" + timeFrame + "\" for " + coinSymbol);
-
-                }
-
-                return coinSymbol + "Chart" + timeFrameAbbr + "vs" + vsCurrency;
-
-
-            }
-
-
-
-
-
-        }
-
-
 
 
 
@@ -330,24 +324,30 @@
 
             let coins = await getCoins();
             console.log(coins);
-            let coinsDataPoints = await getCoinsDatapoints('1d', 'usd');
-            console.log(coinsDataPoints);
 
+            let coins24hDataPoints = await getAllCoinDatapoints('24h', 'usd');
+            console.log(coins24hDataPoints);
 
-            coins.forEach(coin => {
-                drawCoinRow(coin);
-            });
+            for(let i=0; i<coins.length - 1; i++) {
+                drawCoinRow(coins[i], coins24hDataPoints[i]);
+            }        
 
+            //get the rest of the data after drawing UI, to not make the user wait:
+            let coins3dDataPoints = await getAllCoinDatapoints('3d', 'usd');
 
-            for (let i = 0; i < coins.length; i++) {
+            let coins7dDataPoints = await getAllCoinDatapoints('7d', 'usd');
 
-            }
+            let coins30dDataPoints = await getAllCoinDatapoints('30d', 'usd');
 
+            let coins90dDataPoints = await getAllCoinDatapoints('90d', 'usd');
 
+            let coins1yhDataPoints = await getAllCoinDatapoints('1y', 'usd');
 
 
 
             //init functions:
+            
+
             async function getCoin(coinId) {
                 let endpoint =
                     "https://api.coingecko.com/api/v3/coins/" +
@@ -394,10 +394,6 @@
 
             }
 
-
-
-
-
             async function getCoinDatapoints(coinId, vsCurrency, fromTime, toTime) {
 
 
@@ -411,76 +407,31 @@
 
                 let datapointsResponse = await fetch(endpoint);
                 let datapointsJson = await datapointsResponse.json();
+                
+                //strip the time data
+                let prices = datapointsJson.prices;
+                let newPrices = new Array();
 
+                
+                for(let i=0; i<prices.length; i++) {
+                    newPrices[i] = prices[i][1]
+                }
+
+                datapointsJson.prices = newPrices;
                 return datapointsJson;
             }
 
-            async function getCoinsDatapoints(timeFrame, vsCurrency) {
+            async function getAllCoinDatapoints(timeFrame, vsCurrency) {
 
                 let toTime = getUnixTime();
-                let fromTime = 1262339000;
 
-                switch (timeFrame) {
+                timeFrame = getTimeFrameCode(timeFrame);
 
-                    case '24h':
-                    case '24':
-                    case '1d':
-                        fromTime = toTime - (unixHour * 24)
-                        break;
+                let fromTime = getFromTime(timeFrame, toTime);
 
-                    case '48h':
-                    case '48':
-                    case '2d':
-                        fromTime = toTime - (unixHour * 48)
-                        break;
+                
 
-                    case '3d':
-                    case '3':
-                        fromTime = toTime - (unixHour * 72)
-                        break;
-
-                    case '7d':
-                    case '7':
-                        fromTime = toTime - (unixDay * 7)
-                        break;
-
-                    case '30d':
-                    case '30':
-                    case '1m':
-                        fromTime = toTime - (unixDay * 30)
-                        break;
-
-                    case '60d':
-                    case '60':
-                    case '2m':
-                        fromTime = toTime - (unixDay * 60)
-                        break;
-
-                    case '90d':
-                    case '90':
-                    case '3m':
-                        fromTime = toTime - (unixDay * 90)
-                        break;
-
-                    case '180d':
-                    case '180':
-                    case '6m':
-                        fromTime = toTime - (unixDay * 180)
-                        break;
-
-                    case '365d':
-                    case '365':
-                    case '1y':
-                        fromTime = toTime - (unixDay * 365)
-                        break;
-
-                    default:
-                        fromTime = 1262339000;
-                        console.log("Error in timeframe \"" + timeFrame + "\"");
-
-                }
-
-
+                console.log("Getting charts from " + fromTime + " to " + toTime + "");
 
                 let btcDataPoints =
                     await getCoinDatapoints("bitcoin", 'usd', fromTime, toTime);
@@ -488,6 +439,7 @@
                 btcDataPoints.fromTime = fromTime;
                 btcDataPoints.toTime = toTime;
                 btcDataPoints.vsCurrency = vsCurrency;
+               btcDataPoints.timeFrame = timeFrame
 
 
                 let ethDataPoints =
@@ -496,6 +448,7 @@
                 ethDataPoints.fromTime = fromTime;
                 ethDataPoints.toTime = toTime;
                 ethDataPoints.vsCurrency = vsCurrency;
+                ethDataPoints.timeFrame = timeFrame
 
 
                 let bnbDataPoints =
@@ -504,6 +457,7 @@
                 bnbDataPoints.fromTime = fromTime;
                 bnbDataPoints.toTime = toTime;
                 bnbDataPoints.vsCurrency = vsCurrency;
+                bnbDataPoints.timeFrame = timeFrame
 
 
                 let adaDataPoints =
@@ -512,6 +466,7 @@
                 adaDataPoints.fromTime = fromTime;
                 adaDataPoints.toTime = toTime;
                 adaDataPoints.vsCurrency = vsCurrency;
+                adaDataPoints.timeFrame = timeFrame
 
 
                 let solDataPoints =
@@ -520,6 +475,7 @@
                 solDataPoints.fromTime = fromTime;
                 solDataPoints.toTime = toTime;
                 solDataPoints.vsCurrency = vsCurrency;
+                solDataPoints.timeFrame = timeFrame
 
 
                 let xrpDataPoints =
@@ -528,6 +484,7 @@
                 xrpDataPoints.fromTime = fromTime;
                 xrpDataPoints.toTime = toTime;
                 xrpDataPoints.vsCurrency = vsCurrency;
+                xrpDataPoints.timeFrame = timeFrame
 
 
                 let ltcDataPoints =
@@ -536,6 +493,7 @@
                 ltcDataPoints.fromTime = fromTime;
                 ltcDataPoints.toTime = toTime;
                 ltcDataPoints.vsCurrency = vsCurrency;
+                xrpDataPoints.timeFrame = timeFrame
 
 
                 let vetDataPoints =
@@ -544,12 +502,60 @@
                 vetDataPoints.fromTime = fromTime;
                 vetDataPoints.toTime = toTime;
                 vetDataPoints.vsCurrency = vsCurrency;
+                xrpDataPoints.timeFrame = timeFrame
 
 
 
                 return [btcDataPoints, ethDataPoints, bnbDataPoints, adaDataPoints, solDataPoints, xrpDataPoints, ltcDataPoints, vetDataPoints];
 
             }
+
+            
+            async function drawCoinRow(coin, dataPoints) {
+
+            let pChange = getPercentChange(dataPoints.prices);
+            let changeColor = getChangeColor(dataPoints.prices);
+
+            $(document.body).append('<tr>');
+
+            $(document.body).append('<td>');
+            $(document.body).append('' + coin.name + '');
+            $(document.body).append('</td>');
+
+            $(document.body).append('<td>');
+            
+            $(document.body).append('<b style="color: ' + changeColor + ';">' + pChange.toFixed(2) + "%</b>");
+            $(document.body).append('</td>');
+
+            $(document.body).append('<td>');
+            let chartId = getChartId(coin.symbol,'24h', 'usd')
+            $(document.body).append('<br><canvas id="' + chartId + '" class="' + chartId + '"></canvas>');
+            $(document.body).append('</td>');
+
+
+            $(document.body).append('</tr>');
+
+
+            makeCoinChart(chartId, dataPoints.prices);
+
+
+            //makeCoinChart(coinObj.id + 'vsBtc', vsBtc);
+
+            //makeCoinChart(coinObj.id + 'vsEth', vsEth);
+
+
+
+
+
+          
+
+
+
+
+        }
+
+
+
 
         }
         //end init
