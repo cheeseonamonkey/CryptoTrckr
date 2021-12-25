@@ -3,12 +3,16 @@ canvas.VsBtc,
 canvas.VsEth,
 canvas.VsUsd {
 
-    width: 811px !important;
-    height: 811px !important;
+    width: 100% !important;
+    height: 100% !important;
 
     display: inline-block;
 }
 
+th, td {
+    padding: 10px;
+    box-shadow: -1px 1px black;
+}
 
 /* Dark mode: */
 
