@@ -41,8 +41,6 @@
 
             }
 
-
-
         function getPercentChange(dataPoints) {
             let before = dataPoints[0];
             let after = dataPoints[dataPoints.length - 1]
@@ -193,6 +191,7 @@ fromTime = toTime - (unixDay * 365);
 
             //x axis (days descending backwards)
             let xaxislbls = Array(dataPoints.length);
+
             for (let i = dataPoints.length - 1; i >= 0; i--) {
                 xaxislbls[i] = i;
             }
@@ -333,11 +332,11 @@ fromTime = toTime - (unixDay * 365);
             }        
 
             //get the rest of the data after drawing UI, to not make the user wait:
-            let coins3dDataPoints = await getAllCoinDatapoints('3d', 'usd');
+            //let coins3dDataPoints = await getAllCoinDatapoints('3d', 'usd');
 
             let coins7dDataPoints = await getAllCoinDatapoints('7d', 'usd');
 
-            let coins30dDataPoints = await getAllCoinDatapoints('30d', 'usd');
+            //let coins30dDataPoints = await getAllCoinDatapoints('30d', 'usd');
 
             let coins90dDataPoints = await getAllCoinDatapoints('90d', 'usd');
 
@@ -355,6 +354,7 @@ fromTime = toTime - (unixDay * 365);
                     "?tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=true"
 
                 let coinResponse = await fetch(endpoint);
+
                 let coinJson = await coinResponse.json();
 
                 return coinJson;
@@ -406,6 +406,12 @@ fromTime = toTime - (unixDay * 365);
                     'to=' + toTime;
 
                 let datapointsResponse = await fetch(endpoint);
+
+//somehow here:
+    //Uncaught SyntaxError: Unexpected token T in JSON at position 0
+    //oh I think it just gets something that isn't JSON once it has been rate limited:
+        //"API has a rate limit of 50 calls/minute"
+
                 let datapointsJson = await datapointsResponse.json();
                 
                 //strip the time data
@@ -416,6 +422,7 @@ fromTime = toTime - (unixDay * 365);
                 for(let i=0; i<prices.length; i++) {
                     newPrices[i] = prices[i][1]
                 }
+
 
                 datapointsJson.prices = newPrices;
                 return datapointsJson;
@@ -568,13 +575,12 @@ fromTime = toTime - (unixDay * 365);
 <body>
 
 
-    <table style="margin:15px; padding: 2px;">
+    <table style="margin:15px; padding: 8px;">
         <tr>
             <td><span onmouseover="mouseOverCurrency('usd')">usd</span></td>
             <td><span onmouseover="mouseOverCurrency('btc')">btc</span></td>
             <td><span onmouseover="mouseOverCurrency('eth')">eth</span></td>
         </tr>
-    </table>
 
 
     <script>
@@ -583,6 +589,7 @@ fromTime = toTime - (unixDay * 365);
 
 
 
+    </table>
 
 
 </body>
