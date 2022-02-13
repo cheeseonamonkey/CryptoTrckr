@@ -173,6 +173,8 @@ fromTime = toTime - (unixDay * 365);
             ut = ut / 1000;
             ut = Math.round(ut);
 
+            console.log("Unix time now: " + ut);
+
             return ut;
         }
 
@@ -330,7 +332,6 @@ fromTime = toTime - (unixDay * 365);
             }        
 
             //get the rest of the data after drawing UI, to not make the user wait:
-
             //let coins3dDataPoints = await getAllCoinDatapoints('3d', 'usd');
 
             let coins7dDataPoints = await getAllCoinDatapoints('7d', 'usd');
@@ -535,21 +536,14 @@ fromTime = toTime - (unixDay * 365);
 
             $(document.body).append('<td>');
             let chartId = getChartId(coin.symbol,'24h', 'usd')
-            $(document.body).append('<canvas id="' + chartId + '" class="' + chartId + '"></canvas>');
+            $(document.body).append('<br><canvas id="' + chartId + '" class="' + chartId + '"></canvas>');
             $(document.body).append('</td>');
 
-
- $(document.body).append('<td>');
-$(document.body).append('</td>');
-
-
- $(document.body).append('<td>');
-$(document.body).append('</td>');
 
             $(document.body).append('</tr>');
 
 
-        makeCoinChart(chartId, dataPoints.prices);
+            makeCoinChart(chartId, dataPoints.prices);
 
 
             //makeCoinChart(coinObj.id + 'vsBtc', vsBtc);
@@ -583,13 +577,11 @@ $(document.body).append('</td>');
 
     <table style="margin:15px; padding: 8px;">
         <tr>
-            <th>Coin<br></th>
-            <th>Price</th>
-            <th>% 24h</th>
-            <th>% 7d</th>
-            <th>% 30d</th>
-            <th>% 1y</th>
+            <td><span onmouseover="mouseOverCurrency('usd')">usd</span></td>
+            <td><span onmouseover="mouseOverCurrency('btc')">btc</span></td>
+            <td><span onmouseover="mouseOverCurrency('eth')">eth</span></td>
         </tr>
+
 
     <script>
         initCoins();
